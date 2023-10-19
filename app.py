@@ -206,14 +206,12 @@ def createProduct():
             
 
 # Route to delete a product
-@app.route('/products/<int:id>', methods=['DELETE'])
+@app.route('/products/<id>', methods=['DELETE'])
 def deleteProduct(id):
     product = Products.query.get(id)
     if product:
-        db.session.query.filter(Products.id == id).delete()
+        db.session.delete(product)
         db.session.commit()
-        # db.session.delete(product)
-        # db.session.commit()
         return jsonify(f'Producto con ID {id} fue eliminado'), 200
     return jsonify({'message': 'No existe el producto solicitado'}), 404
 
