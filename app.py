@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 import re
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://straysadmin:3oIOCNl8Rnz8mS6ASzGLWIDEhWakM37d@dpg-cko717oujous73a2h6o0-a.oregon-postgres.render.com/straysdb'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://straysadmin:3oIOCNl8Rnz8mS6ASzGLWIDEhWakM37d@dpg-cko717oujous73a2h6o0-a/straysdb'
 db = SQLAlchemy(app)
 
 CORS(app)  # Middleware for interacting with your React server
