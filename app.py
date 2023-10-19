@@ -35,12 +35,11 @@ def createUser():
         db.session.commit()
         return jsonify({'message': '¡Te has registrado con éxito!'}), 200
     except IntegrityError as e:
-        error_message = str(e)
-        if re.search(r"Violation of UNIQUE KEY constraint", error_message, re.I):
-            return jsonify({'message': 'El e-mail ingresado ya existe, intenta nuevamente'}), 400  # HTTP 400 Bad Request
+        error_message = str(e.orig)
+        if "unique constraint" in error_message.lower():
+            return jsonify({'message': 'El e-mail ingresado ya existe, intenta nuevamente'}), 400
         else:
-            # Handle other IntegrityErrors or database errors as needed
-            return jsonify({'message': 'Tuvimos un problema, porfavor vuelve a intentar'}), 500  # HTTP 500 Internal Server Error
+            return jsonify({'message': 'Tuvimos un problema, por favor vuelve a intentar'}), 500
 
 # Route to get all users
 @app.route('/users', methods=['GET'])
