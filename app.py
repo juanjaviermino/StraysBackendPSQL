@@ -14,7 +14,7 @@ CORS(app)  # Middleware for interacting with your React server
 # ---------------- MODELS --------------------------
 
 class Users(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(80))
     lastname = db.Column(db.String(80))
     email = db.Column(db.String(120), unique=True)
@@ -27,14 +27,14 @@ class Users(db.Model):
         self.password = password
 
 class Products(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(80))
 
     def __init__(self, name):
         self.name = name
 
 class Sales(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     date = db.Column(db.Date)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -210,8 +210,10 @@ def createProduct():
 def deleteProduct(id):
     product = Products.query.get(id)
     if product:
-        db.session.delete(product)
+        db.session.query.filter(Products.id == id).delete()
         db.session.commit()
+        # db.session.delete(product)
+        # db.session.commit()
         return jsonify(f'Producto con ID {id} fue eliminado'), 200
     return jsonify({'message': 'No existe el producto solicitado'}), 404
 
