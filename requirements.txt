@@ -10,6 +10,7 @@ itsdangerous
 Jinja2
 MarkupSafe
 psycopg2-binary
+psycopg2
 SQLAlchemy
 typing_extensions
 Werkzeug
