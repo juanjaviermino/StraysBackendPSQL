@@ -1,3 +1,5 @@
+#!C:\Users\jmino\AppData\Local\Programs\Python\Python3.9\python.exe
+
 import os
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -6,7 +8,8 @@ from sqlalchemy.exc import IntegrityError
 import re
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://straysadmin:3oIOCNl8Rnz8mS6ASzGLWIDEhWakM37d@dpg-cko717oujous73a2h6o0-a.oregon-postgres.render.com/straysdb'
 db = SQLAlchemy(app)
 
 CORS(app)  # Middleware for interacting with your React server
@@ -150,12 +153,16 @@ def getPasswordByEmail():
 # Route to delete a user
 @app.route('/users/<int:id>', methods=['DELETE'])
 def deleteUser(id):
-    user = Users.query.get(id)
-    if user:
-        db.session.delete(user)
-        db.session.commit()
-        return jsonify(f'User {user.name} has been deleted'), 200
-    return jsonify({'message': 'User not found'}), 404
+    try:
+        user = Users.query.get(id)
+        if user:
+            Users.query.filter_by(id=id).delete()
+            db.session.commit()
+            return jsonify({'message': 'Usuario eliminado satisfactoriamente'}), 200
+        else:
+            return jsonify({'message': 'El usuario no existe'}), 404
+    except Exception as e:
+        return jsonify({'message': 'Ocurrió un error eliminando el usuario'}), 500
 
 # Route to update a user
 @app.route('/users/<int:id>', methods=['PUT'])
@@ -205,19 +212,19 @@ def createProduct():
         return jsonify({'message': 'Ocurrió un error creando el producto'}), 500
             
 
-# Route to delete a product
-@app.route('/dproducts/<int:id>', methods=['POST'])
+@app.route('/products/<id>', methods=['DELETE'])
 def deleteProduct(id):
-    product = Products.query.get(id)
-    if product:
-        db.session.delete(product)
-        db.session.commit()
-        return jsonify(f'Producto con ID {id} fue eliminado'), 200
-    return jsonify({'message': 'No existe el producto solicitado'}), 404
+    try:
+        product = Products.query.get(id)
+        if product:
+            Products.query.filter_by(id=id).delete()
+            db.session.commit()
+            return jsonify({'message': 'Producto eliminado satisfactoriamente'}), 200
+        else:
+            return jsonify({'message': 'El producto no existe'}), 404
+    except Exception as e:
+        return jsonify({'message': 'Ocurrió un error eliminando el producto'}), 500
 
-
-
-#comentario
 
 if __name__ == "__main__":
     app.run(debug=True)
