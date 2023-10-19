@@ -206,7 +206,7 @@ def createProduct():
             
 
 # Route to delete a product
-@app.route('/products/<id>', methods=['DELETE'])
+@app.route('/dproducts/<int:id>', methods=['POST'])
 def deleteProduct(id):
     product = Products.query.get(id)
     if product:
