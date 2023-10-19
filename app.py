@@ -11,6 +11,8 @@ db = SQLAlchemy(app)
 
 CORS(app)  # Middleware for interacting with your React server
 
+# ---------------- MODELS --------------------------
+
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80))
@@ -23,6 +25,25 @@ class Users(db.Model):
         self.lastname = lastname
         self.email = email
         self.password = password
+
+class Products(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
+
+    def __init__(self, name):
+        self.name = name
+
+class Sales(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    ammount = db.Column(db.Float)
+
+    product = db.relationship('Products', backref=db.backref('sales', lazy=True))
+    user = db.relationship('Users', backref=db.backref('sales', lazy=True))
+
+# -------------- CONTROLLERS FOR USERS ----------------------
 
 # Route to create a user
 @app.route('/users', methods=['POST'])
@@ -153,6 +174,50 @@ def updateUser(id):
         db.session.commit()
         return jsonify(f'User {user.name} updated successfully'), 200
     return jsonify({'message': 'User not found'}), 404
+
+
+# -------------- CONTROLLERS FOR PRODUCTS ----------------------
+
+# Route to get all products
+@app.route('/products', methods=['GET'])
+def getProducts():
+    products = Products.query.all()
+    product_list = []
+    for product in products:
+        product_dict = {
+            'id': product.id,
+            'name': product.name,
+        }
+        product_list.append(product_dict)
+    return jsonify(product_list)
+
+# Route to create a product
+@app.route('/products', methods=['POST'])
+def createProduct():
+    data = request.json
+    product = Products(**data)
+    
+    try:
+        db.session.add(product)
+        db.session.commit()
+        return jsonify({'message': 'Producto creado satisfactoriamente'}), 200
+    except IntegrityError as e:
+        return jsonify({'message': 'Ocurrió un error creando el producto'}), 500
+            
+
+# Route to delete a product
+@app.route('/products/<int:id>', methods=['DELETE'])
+def deleteProduct(id):
+    product = Products.query.get(id)
+    if product:
+        db.session.delete(product)
+        db.session.commit()
+        return jsonify(f'Producto con ID {id} fue eliminado'), 200
+    return jsonify({'message': 'No existe el producto solicitado'}), 404
+
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
