@@ -5,7 +5,9 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 import re
+from datetime import datetime
 
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
@@ -253,7 +255,7 @@ def getSales():
     except Exception as e:
         return jsonify({'Hubo un error: ': str(e)}), 500  # Provide the error message for debugging
 
-# Route to create a product
+# Route to create a sale
 @app.route('/sales', methods=['POST'])
 def createSale():
     data = request.json
@@ -269,6 +271,40 @@ def createSale():
             return jsonify({'message': 'Venta creada satisfactoriamente'}), 200
         except IntegrityError as e:
             return jsonify({'message': 'Ocurrió un error creando la venta'}), 500
+
+
+# Route to get the summary of sales between dates
+@app.route('/sales_summary', methods=['GET'])
+def get_sales_summary():
+    begin_date = request.args.get('begin_date', default = None, type = str)
+    final_date = request.args.get('final_date', default = None, type = str)
+
+    # Convert the dates from string to datetime objects
+    begin_date = datetime.strptime(begin_date, '%Y-%m-%d').date() if begin_date else None
+    final_date = datetime.strptime(final_date, '%Y-%m-%d').date() if final_date else None
+
+    if not begin_date or not final_date:
+        return jsonify({'error': 'Both begin_date and final_date parameters are required'}), 400
+
+    try:
+        # Query the Sale and User tables to retrieve the required information for all sales
+        sales_summary = db.session.query(Users.name, func.sum(Sales.ammount)) \
+            .join(Sales, Sales.user_id == Users.id) \
+            .filter(Sales.date.between(begin_date, final_date)) \
+            .group_by(Users.name) \
+            .all()
+
+        summary_info = []
+        for summary in sales_summary:
+            user_summary = {
+                'user_name': summary[0],
+                'total_ammount': str(summary[1])  # Convert amount to string
+            }
+            summary_info.append(user_summary)
+
+        return jsonify(summary_info), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500  # Provide the error message for debugging
 
 if __name__ == "__main__":
     app.run(debug=True)
