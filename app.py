@@ -37,14 +37,16 @@ class Products(db.Model):
         self.name = name
 
 class Sales(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    ammount = db.Column(db.Float)
+    ammount = db.Column(db.Numeric)  # Using the custom numeric type
 
     product = db.relationship('Products', backref=db.backref('sales', lazy=True))
     user = db.relationship('Users', backref=db.backref('sales', lazy=True))
+
+
 
 # -------------- CONTROLLERS FOR USERS ----------------------
 
@@ -225,7 +227,48 @@ def deleteProduct(id):
     except Exception as e:
         return jsonify({'message': 'Ocurrió un error eliminando el producto'}), 500
 
-#continue here
+# -------------- CONTROLLERS FOR SALES ----------------------
+
+@app.route('/sales', methods=['GET'])
+def getSales():
+    try:
+        # Query the Sale, Product, and User tables to retrieve the required information for all sales
+        sales = db.session.query(Sales, Products.name, Users.name, Sales.ammount) \
+            .join(Products, Sales.product_id == Products.id) \
+            .join(Users, Sales.user_id == Users.id) \
+            .all()
+
+        sales_info = []
+        for sale in sales:
+            sale_info = {
+                'id': sale[0].id,
+                'date': sale[0].date.strftime('%Y-%m-%d'),  # Convert date to string
+                'product_name': sale[1],
+                'user_name': sale[2],
+                'ammount': str(sale[3])  # Convert amount to string
+            }
+            sales_info.append(sale_info)
+
+        return jsonify(sales_info), 200
+    except Exception as e:
+        return jsonify({'Hubo un error: ': str(e)}), 500  # Provide the error message for debugging
+
+# Route to create a product
+@app.route('/sales', methods=['POST'])
+def createSale():
+    data = request.json
+    if data['user_id'] == "9999":  # Note that "user_id" is a string in the JSON data
+        return jsonify({'message': 'Por favor selecciona un usuario'}), 400
+    elif data['product_id'] == "9999":
+        return jsonify({'message': 'Por favor selecciona un producto'}), 400
+    else:
+        sale = Sales(**data)
+        try:
+            db.session.add(sale)
+            db.session.commit()
+            return jsonify({'message': 'Venta creada satisfactoriamente'}), 200
+        except IntegrityError as e:
+            return jsonify({'message': 'Ocurrió un error creando la venta'}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
