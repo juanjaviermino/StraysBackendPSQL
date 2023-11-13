@@ -48,8 +48,6 @@ class Sales(db.Model):
     product = db.relationship('Products', backref=db.backref('sales', lazy=True))
     user = db.relationship('Users', backref=db.backref('sales', lazy=True))
 
-
-
 # -------------- CONTROLLERS FOR USERS ----------------------
 
 # Route to create a user
